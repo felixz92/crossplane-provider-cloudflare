@@ -1,4 +1,4 @@
-module github.com/upbound/upjet-provider-template
+module github.com/felixz92/crossplane-provider-cloudflare
 
 go 1.21
 
