@@ -7,10 +7,9 @@ package config
 import (
 	// Note(turkenh): we are importing this to embed provider schema document
 	_ "embed"
+	"github.com/felixz92/crossplane-provider-cloudflare/config/dns"
 
 	ujconfig "github.com/crossplane/upjet/pkg/config"
-
-	"github.com/felixz92/crossplane-provider-cloudflare/config/null"
 )
 
 const (
@@ -36,7 +35,7 @@ func GetProvider() *ujconfig.Provider {
 
 	for _, configure := range []func(provider *ujconfig.Provider){
 		// add custom config functions
-		null.Configure,
+		dns.Configure,
 	} {
 		configure(pc)
 	}

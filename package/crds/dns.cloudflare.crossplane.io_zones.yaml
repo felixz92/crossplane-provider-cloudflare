@@ -4,18 +4,18 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: resources.null.cloudflare.upbound.io
+  name: zones.dns.cloudflare.crossplane.io
 spec:
-  group: null.cloudflare.upbound.io
+  group: dns.cloudflare.crossplane.io
   names:
     categories:
     - crossplane
     - managed
     - cloudflare
-    kind: Resource
-    listKind: ResourceList
-    plural: resources
-    singular: resource
+    kind: Zone
+    listKind: ZoneList
+    plural: zones
+    singular: zone
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,10 +34,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Resource is the Schema for the Resources API. The null_resource
-          resource implements the standard resource lifecycle but takes no further
-          action.hashicorp. The triggers argument allows specifying an arbitrary set
-          of values that, when changed, will cause the resource to be replaced.
+        description: Zone is the Schema for the Zones API. Provides a Cloudflare Zone
+          resource. Zone is the basic resource for working with Cloudflare and is
+          roughly equivalent to a domain name that the user purchases.
         properties:
           apiVersion:
             description: |-
@@ -57,7 +56,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ResourceSpec defines the desired state of Resource
+            description: ZoneSpec defines the desired state of Zone
             properties:
               deletionPolicy:
                 default: Delete
@@ -75,14 +74,43 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  accountId:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
-                    type: object
-                    x-kubernetes-map-type: granular
+                      (String) Account ID to manage the zone resource in.
+                      Account ID to manage the zone resource in.
+                    type: string
+                  jumpStart:
+                    description: |-
+                      (Boolean) Whether to scan for DNS records on creation. Ignored after zone is created.
+                      Whether to scan for DNS records on creation. Ignored after zone is created.
+                    type: boolean
+                  paused:
+                    description: |-
+                      (Boolean) Whether this zone is paused (traffic bypasses Cloudflare). Defaults to false.
+                      Whether this zone is paused (traffic bypasses Cloudflare). Defaults to `false`.
+                    type: boolean
+                  plan:
+                    description: |-
+                      (String) The name of the commercial plan to apply to the zone. Available values: free, lite, pro, pro_plus, business, enterprise, partners_free, partners_pro, partners_business, partners_enterprise.
+                      The name of the commercial plan to apply to the zone. Available values: `free`, `lite`, `pro`, `pro_plus`, `business`, `enterprise`, `partners_free`, `partners_pro`, `partners_business`, `partners_enterprise`.
+                    type: string
+                  type:
+                    description: |-
+                      hosted zone or a CNAME setup. Available values: full, partial, secondary. Defaults to full.
+                      A full zone implies that DNS is hosted with Cloudflare. A partial zone is typically a partner-hosted zone or a CNAME setup. Available values: `full`, `partial`, `secondary`. Defaults to `full`.
+                    type: string
+                  vanityNameServers:
+                    description: |-
+                      (List of String) List of Vanity Nameservers (if set).
+                      List of Vanity Nameservers (if set).
+                    items:
+                      type: string
+                    type: array
+                  zone:
+                    description: |-
+                      (String) The DNS zone name which will be added. Modifying this attribute will force creation of a new resource.
+                      The DNS zone name which will be added. **Modifying this attribute will force creation of a new resource.**
+                    type: string
                 type: object
               initProvider:
                 description: |-
@@ -97,14 +125,43 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  accountId:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
-                    type: object
-                    x-kubernetes-map-type: granular
+                      (String) Account ID to manage the zone resource in.
+                      Account ID to manage the zone resource in.
+                    type: string
+                  jumpStart:
+                    description: |-
+                      (Boolean) Whether to scan for DNS records on creation. Ignored after zone is created.
+                      Whether to scan for DNS records on creation. Ignored after zone is created.
+                    type: boolean
+                  paused:
+                    description: |-
+                      (Boolean) Whether this zone is paused (traffic bypasses Cloudflare). Defaults to false.
+                      Whether this zone is paused (traffic bypasses Cloudflare). Defaults to `false`.
+                    type: boolean
+                  plan:
+                    description: |-
+                      (String) The name of the commercial plan to apply to the zone. Available values: free, lite, pro, pro_plus, business, enterprise, partners_free, partners_pro, partners_business, partners_enterprise.
+                      The name of the commercial plan to apply to the zone. Available values: `free`, `lite`, `pro`, `pro_plus`, `business`, `enterprise`, `partners_free`, `partners_pro`, `partners_business`, `partners_enterprise`.
+                    type: string
+                  type:
+                    description: |-
+                      hosted zone or a CNAME setup. Available values: full, partial, secondary. Defaults to full.
+                      A full zone implies that DNS is hosted with Cloudflare. A partial zone is typically a partner-hosted zone or a CNAME setup. Available values: `full`, `partial`, `secondary`. Defaults to `full`.
+                    type: string
+                  vanityNameServers:
+                    description: |-
+                      (List of String) List of Vanity Nameservers (if set).
+                      List of Vanity Nameservers (if set).
+                    items:
+                      type: string
+                    type: array
+                  zone:
+                    description: |-
+                      (String) The DNS zone name which will be added. Modifying this attribute will force creation of a new resource.
+                      The DNS zone name which will be added. **Modifying this attribute will force creation of a new resource.**
+                    type: string
                 type: object
               managementPolicies:
                 default:
@@ -273,23 +330,83 @@ spec:
             required:
             - forProvider
             type: object
+            x-kubernetes-validations:
+            - message: spec.forProvider.accountId is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.accountId)
+                || (has(self.initProvider) && has(self.initProvider.accountId))'
+            - message: spec.forProvider.zone is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.zone)
+                || (has(self.initProvider) && has(self.initProvider.zone))'
           status:
-            description: ResourceStatus defines the observed state of Resource.
+            description: ZoneStatus defines the observed state of Zone.
             properties:
               atProvider:
                 properties:
-                  id:
-                    description: (String) This is set to a random value at create
-                      time.
-                    type: string
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  accountId:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
+                      (String) Account ID to manage the zone resource in.
+                      Account ID to manage the zone resource in.
+                    type: string
+                  id:
+                    description: (String) The ID of this resource.
+                    type: string
+                  jumpStart:
+                    description: |-
+                      (Boolean) Whether to scan for DNS records on creation. Ignored after zone is created.
+                      Whether to scan for DNS records on creation. Ignored after zone is created.
+                    type: boolean
+                  meta:
+                    additionalProperties:
+                      type: boolean
+                    description: (Map of Boolean)
                     type: object
                     x-kubernetes-map-type: granular
+                  nameServers:
+                    description: |-
+                      assigned name servers. This is only populated for zones that use Cloudflare DNS.
+                      Cloudflare-assigned name servers. This is only populated for zones that use Cloudflare DNS.
+                    items:
+                      type: string
+                    type: array
+                  paused:
+                    description: |-
+                      (Boolean) Whether this zone is paused (traffic bypasses Cloudflare). Defaults to false.
+                      Whether this zone is paused (traffic bypasses Cloudflare). Defaults to `false`.
+                    type: boolean
+                  plan:
+                    description: |-
+                      (String) The name of the commercial plan to apply to the zone. Available values: free, lite, pro, pro_plus, business, enterprise, partners_free, partners_pro, partners_business, partners_enterprise.
+                      The name of the commercial plan to apply to the zone. Available values: `free`, `lite`, `pro`, `pro_plus`, `business`, `enterprise`, `partners_free`, `partners_pro`, `partners_business`, `partners_enterprise`.
+                    type: string
+                  status:
+                    description: |-
+                      (String) Status of the zone. Available values: active, pending, initializing, moved, deleted, deactivated.
+                      Status of the zone. Available values: `active`, `pending`, `initializing`, `moved`, `deleted`, `deactivated`.
+                    type: string
+                  type:
+                    description: |-
+                      hosted zone or a CNAME setup. Available values: full, partial, secondary. Defaults to full.
+                      A full zone implies that DNS is hosted with Cloudflare. A partial zone is typically a partner-hosted zone or a CNAME setup. Available values: `full`, `partial`, `secondary`. Defaults to `full`.
+                    type: string
+                  vanityNameServers:
+                    description: |-
+                      (List of String) List of Vanity Nameservers (if set).
+                      List of Vanity Nameservers (if set).
+                    items:
+                      type: string
+                    type: array
+                  verificationKey:
+                    description: |-
+                      (String) Contains the TXT record value to validate domain ownership. This is only populated for zones of type partial.
+                      Contains the TXT record value to validate domain ownership. This is only populated for zones of type `partial`.
+                    type: string
+                  zone:
+                    description: |-
+                      (String) The DNS zone name which will be added. Modifying this attribute will force creation of a new resource.
+                      The DNS zone name which will be added. **Modifying this attribute will force creation of a new resource.**
+                    type: string
                 type: object
               conditions:
                 description: Conditions of the resource.

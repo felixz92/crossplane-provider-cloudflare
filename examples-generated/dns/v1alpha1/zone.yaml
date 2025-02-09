@@ -1,0 +1,12 @@
+apiVersion: dns.cloudflare.crossplane.io/v1alpha1
+kind: Zone
+metadata:
+  annotations:
+    meta.upbound.io/example-id: dns/v1alpha1/zone
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    accountId: f037e56e89293a057740de681ac9abbe
+    zone: example.com

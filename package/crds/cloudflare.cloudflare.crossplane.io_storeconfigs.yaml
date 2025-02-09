@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: storeconfigs.cloudflare.upbound.io
+  name: storeconfigs.cloudflare.cloudflare.crossplane.io
 spec:
-  group: cloudflare.upbound.io
+  group: cloudflare.cloudflare.crossplane.io
   names:
     categories:
     - crossplane

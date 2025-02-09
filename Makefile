@@ -10,12 +10,12 @@ export TERRAFORM_VERSION ?= 1.5.7
 # licensed under BSL, which is not permitted.
 TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAFORM_VERSION)\n1.6" | sort -V | head -n1`" ] && echo 1 || echo 0)
 
-export TERRAFORM_PROVIDER_SOURCE ?= hashicorp/null
-export TERRAFORM_PROVIDER_REPO ?= https://github.com/hashicorp/terraform-provider-null
-export TERRAFORM_PROVIDER_VERSION ?= 3.2.2
-export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-null
-export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= https://releases.hashicorp.com/$(TERRAFORM_PROVIDER_DOWNLOAD_NAME)/$(TERRAFORM_PROVIDER_VERSION)
-export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-null_v3.1.0_x5
+export TERRAFORM_PROVIDER_SOURCE ?= cloudflare/cloudflare
+export TERRAFORM_PROVIDER_REPO ?= https://github.com/cloudflare/terraform-provider-cloudflare
+export TERRAFORM_PROVIDER_VERSION ?= 4.52.0
+export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-cloudflare
+export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= $(TERRAFORM_PROVIDER_REPO)/releases/download/v$(TERRAFORM_PROVIDER_VERSION)/
+export TERRAFORM_NATIVE_PROVIDER_BINARY ?= $(TERRAFORM_PROVIDER_DOWNLOAD_NAME)_$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
 
 
@@ -57,23 +57,23 @@ GO_SUBDIRS += cmd internal apis
 KIND_VERSION = v0.15.0
 UP_VERSION = v0.28.0
 UP_CHANNEL = stable
-UPTEST_VERSION = v0.5.0
+UPTEST_VERSION = v0.13.1
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
 # Setup Images
 
-REGISTRY_ORGS ?= xpkg.upbound.io/upbound
+REGISTRY_ORGS ?= xpkg.upbound.io/felixz92
 IMAGES = $(PROJECT_NAME)
 -include build/makelib/imagelight.mk
 
 # ====================================================================================
 # Setup XPKG
 
-XPKG_REG_ORGS ?= xpkg.upbound.io/upbound
+XPKG_REG_ORGS ?= xpkg.upbound.io/felixz92
 # NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
 # inferred.
-XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/upbound
+XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/felixz92
 XPKGS = $(PROJECT_NAME)
 -include build/makelib/xpkg.mk
 
@@ -171,7 +171,7 @@ run: go.build
 
 # ====================================================================================
 # End to End Testing
-CROSSPLANE_VERSION = 1.16.0
+CROSSPLANE_VERSION = 1.18.2
 CROSSPLANE_NAMESPACE = upbound-system
 -include build/makelib/local.xpkg.mk
 -include build/makelib/controlplane.mk
@@ -251,8 +251,25 @@ crossplane.help:
 
 help-special: crossplane.help
 
-.PHONY: crossplane.help help-special
+
+login: $(UP)
+	$(UP) login
+
+docs:
+	crd-ref-docs --config docs.yaml --renderer markdown --output-path docs/ --source-path apis/ --renderer=markdown
 
 # TODO(negz): Update CI to use these targets.
-vendor: modules.download
-vendor.check: modules.check
+vendor: go.vendor
+vendor.check: go.vendor.check
+
+
+.PHONY: crossplane.help help-special login docs
+
+kcl:
+	mv kcl/crossplane_authentik/kcl.mod* kcl/ && rm -rf kcl/crossplane_authentik
+	cd kcl && kcl import -m crd -p crossplane_authentik -s -f ../package/crds
+	mv kcl/kcl.mod* kcl/crossplane_authentik/
+	cd kcl/crossplane_authentik/v1alpha1 && for f in *.k  ; do if [[ $$f != authentik* ]] ; then prefix="$$(echo $$f | cut -d'_' -f1)"; echo $$prefix && mkdir -p ../$$prefix/v1alpha1 && mv $$f ../$$prefix/v1alpha1/  ; fi  ; done
+	rm -rf kcl/crossplane_authentik/k8s/
+
+.PHONY: kcl
