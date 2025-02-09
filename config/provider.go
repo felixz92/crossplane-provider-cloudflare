@@ -7,6 +7,7 @@ package config
 import (
 	// Note(turkenh): we are importing this to embed provider schema document
 	_ "embed"
+
 	"github.com/felixz92/crossplane-provider-cloudflare/config/dns"
 
 	ujconfig "github.com/crossplane/upjet/pkg/config"

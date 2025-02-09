@@ -6,10 +6,11 @@ package main
 
 import (
 	"context"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"path/filepath"
 	"time"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/crossplane/crossplane-runtime/pkg/certificates"
 
