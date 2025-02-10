@@ -15,7 +15,7 @@ func Configure(p *config.Provider) {
 		// this resource, which would be "github"
 		r.ShortGroup = "dns"
 	})
-	p.AddResourceConfigurator("cloudflare_dns_record", func(r *config.Resource) {
+	p.AddResourceConfigurator("cloudflare_record", func(r *config.Resource) {
 		r.ShortGroup = "dns"
 
 		r.References["zone_id"] = ZoneRef

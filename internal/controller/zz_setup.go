@@ -9,6 +9,7 @@ import (
 
 	"github.com/crossplane/upjet/pkg/controller"
 
+	record "github.com/felixz92/crossplane-provider-cloudflare/internal/controller/dns/record"
 	zone "github.com/felixz92/crossplane-provider-cloudflare/internal/controller/dns/zone"
 	providerconfig "github.com/felixz92/crossplane-provider-cloudflare/internal/controller/providerconfig"
 )
@@ -17,6 +18,7 @@ import (
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		record.Setup,
 		zone.Setup,
 		providerconfig.Setup,
 	} {
