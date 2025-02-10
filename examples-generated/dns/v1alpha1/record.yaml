@@ -12,8 +12,6 @@ spec:
     name: terraform
     ttl: 3600
     type: A
-    zoneIdRef:
-      name: test
     zoneIdSelector:
       matchLabels:
         testing.upbound.io/example-name: example
