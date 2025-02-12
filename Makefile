@@ -266,10 +266,10 @@ vendor.check: go.vendor.check
 .PHONY: crossplane.help help-special login docs
 
 kcl:
-	mv kcl/crossplane_authentik/kcl.mod* kcl/ && rm -rf kcl/crossplane_authentik
-	cd kcl && kcl import -m crd -p crossplane_authentik -s -f ../package/crds
-	mv kcl/kcl.mod* kcl/crossplane_authentik/
-	cd kcl/crossplane_authentik/v1alpha1 && for f in *.k  ; do if [[ $$f != authentik* ]] ; then prefix="$$(echo $$f | cut -d'_' -f1)"; echo $$prefix && mkdir -p ../$$prefix/v1alpha1 && mv $$f ../$$prefix/v1alpha1/  ; fi  ; done
-	rm -rf kcl/crossplane_authentik/k8s/
+	mv kcl/crossplane_cloudflare/kcl.mod* kcl/ && rm -rf kcl/crossplane_cloudflare
+	cd kcl && kcl import -m crd -p crossplane_cloudflare -s -f ../package/crds
+	mv kcl/kcl.mod* kcl/crossplane_cloudflare/
+	cd kcl/crossplane_cloudflare/v1alpha1 && for f in *.k  ; do if [[ $$f != cloudflare* ]] ; then prefix="$$(echo $$f | cut -d'_' -f1)"; echo $$prefix && mkdir -p ../$$prefix/v1alpha1 && mv $$f ../$$prefix/v1alpha1/  ; fi  ; done
+	rm -rf kcl/crossplane_cloudflare/k8s/
 
 .PHONY: kcl
